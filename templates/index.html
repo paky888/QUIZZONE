@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUIZZONE  RSD1A by PdS</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function parlaTesto(testo) {
+            // Usa l'API 'SpeechSynthesis' per leggere il testo
+            const utterance = new SpeechSynthesisUtterance(testo);
+            utterance.rate = 1;  // Imposta la velocità
+            speechSynthesis.speak(utterance);
+        }
+
+        function aggiungiDomanda() {
+            const domanda = $('#domanda').val();
+            if (domanda.trim() !== '') {
+                $.post('/aggiungi', { domanda: domanda }, function(data) {
+                    if (data.status === 'success') {
+                        $('#domande').append('<button onclick="parlaTesto(\'' + domanda + '\')">' + domanda + '</button><br>');
+                        $('#domanda').val('');  // Reset del campo input
+                    }
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Inserisci una nuova domanda</h1>
+    <input type="text" id="domanda" placeholder="Inserisci una domanda">
+    <button onclick="aggiungiDomanda()">Aggiungi</button>
+
+    <h2>Domande</h2>
+    <div id="domande">
+        {% for domanda in domande %}
+            <button onclick="parlaTesto('{{ domanda }}')">{{ domanda }}</button><br>
+        {% endfor %}
+    </div>
+</body>
+</html>
