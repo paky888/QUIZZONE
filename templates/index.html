@@ -2,67 +2,79 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Quizzone RSD1A</title>
+    <title>Quizzone</title>
     <style>
         body {
-            font-family: Arial;
+            font-family: Arial, sans-serif;
             text-align: center;
-            padding: 30px;
         }
-        .domanda {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px auto;
-            max-width: 600px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 8px;
-        }
-        .btn {
-            padding: 6px 12px;
-            font-size: 16px;
-            margin: 10px;
-            cursor: pointer;
-        }
-        .delete-button {
-            background: none;
+        .question-btn {
+            display: inline-block;
+            margin: 8px;
+            padding: 12px 24px;
+            font-size: 18px;
             border: none;
-            font-size: 20px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        .question-btn.done {
+            background-color: #a8e6a3; /* Verde chiaro */
+        }
+        .delete-btn {
             color: red;
+            font-weight: bold;
+            margin-left: 10px;
             cursor: pointer;
         }
     </style>
-    <script>
-        function speak(text) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.9;  // velocità più lenta
-            speechSynthesis.speak(utterance);
-        }
-    </script>
 </head>
 <body>
-    <h1>Quizzone RSD1A</h1>
+    <h1>QUIZZONE</h1>
 
-    <form method="POST" action="/add">
-        <input type="text" name="domanda" placeholder="Inserisci una frase" required>
-        <button class="btn" type="submit">Aggiungi</button>
+    <form action="/add" method="post">
+        <input type="text" name="question" placeholder="Scrivi una domanda" required>
+        <button type="submit">Aggiungi domanda</button>
     </form>
 
-    <form method="POST" action="/delete_all" onsubmit="return confirm('Sei sicuro di voler cancellare tutte le frasi?')">
-        <button class="btn" style="background-color: darkred; color: white;">CANCELLA FRASI</button>
+    <form action="/clear" method="post" style="margin-top: 20px;">
+        <button type="submit" style="background-color: red; color: white;">CANCELLA TUTTE LE DOMANDE</button>
     </form>
 
-    <hr>
-
-    {% for domanda in domande %}
-    <div class="domanda">
-        <button class="btn" onclick="speak('{{ domanda }}')">{{ domanda }}</button>
-        <form method="POST" action="/delete_one" style="margin: 0;">
-            <input type="hidden" name="domanda" value="{{ domanda }}">
-            <button type="submit" class="delete-button" title="Cancella questa frase">❌</button>
-        </form>
+    <div id="questions" style="margin-top: 30px;">
+        {% for question in questions %}
+        <div>
+            <button class="question-btn" onclick="speak('{{ question | e }}', this)">{{ question }}</button>
+            <span class="delete-btn" onclick="deleteQuestion('{{ question | e }}')">✖</span>
+        </div>
+        {% endfor %}
     </div>
-    {% endfor %}
+
+    <script>
+        function speak(text, button) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.8; // Abbassa la velocità del parlato
+            window.speechSynthesis.speak(utterance);
+
+            // Cambia colore del bottone dopo il click
+            button.classList.add("done");
+        }
+
+        function deleteQuestion(question) {
+            fetch('/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ question: question })
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                }
+            });
+        }
+    </script>
 </body>
 </html>
