@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Quizzone</title>
+    <title>Quizzone by PdS</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,7 +31,7 @@
     </style>
 </head>
 <body>
-    <h1>QUIZZONE</h1>
+    <h1>QUIZZONE by PdS</h1>
 
     <form action="/add" method="post">
         <input type="text" name="question" placeholder="Scrivi una domanda" required>
@@ -54,7 +54,7 @@
     <script>
         function speak(text, button) {
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.8; // Abbassa la velocità del parlato
+            utterance.rate = 0.5; // Abbassa la velocità del parlato
             window.speechSynthesis.speak(utterance);
 
             // Cambia colore del bottone dopo il click
