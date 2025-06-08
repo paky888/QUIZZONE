@@ -2,67 +2,161 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Quizzone RSD1A</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUIZZONE  RSD1A</title>
     <style>
         body {
-            font-family: Arial;
+            font-family: Arial, sans-serif;
             text-align: center;
-            padding: 30px;
+            margin: 0;
+            padding: 0;
         }
-        .domanda {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px auto;
-            max-width: 600px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 8px;
+        .question-container {
+            margin-top: 20px;
         }
-        .btn {
-            padding: 6px 12px;
+        .question-button {
             font-size: 16px;
-            margin: 10px;
+            padding: 10px;
+            margin: 5px;
             cursor: pointer;
         }
-        .delete-button {
-            background: none;
-            border: none;
-            font-size: 20px;
+        .delete-icon {
             color: red;
+            font-size: 18px;
             cursor: pointer;
+            margin-left: 10px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
         }
     </style>
-    <script>
-        function speak(text) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.4;  // velocità più lenta
-            speechSynthesis.speak(utterance);
-        }
-    </script>
 </head>
 <body>
-    <h1>Quizzone RSD1A</h1>
 
-    <form method="POST" action="/add">
-        <input type="text" name="domanda" placeholder="Inserisci una frase" required>
-        <button class="btn" type="submit">Aggiungi</button>
-    </form>
-
-    <form method="POST" action="/delete_all" onsubmit="return confirm('Sei sicuro di voler cancellare tutte le frasi?')">
-        <button class="btn" style="background-color: darkred; color: white;">CANCELLA FRASI</button>
-    </form>
-
-    <hr>
-
-    {% for domanda in domande %}
-    <div class="domanda">
-        <button class="btn" onclick="speak('{{ domanda }}')">{{ domanda }}</button>
-        <form method="POST" action="/delete_one" style="margin: 0;">
-            <input type="hidden" name="domanda" value="{{ domanda }}">
-            <button type="submit" class="delete-button" title="Cancella questa frase">❌</button>
-        </form>
+    <h1>QUIZZONE  RSD1A</h1>
+    
+    <div>
+        <input type="text" id="question-input" placeholder="Aggiungi una nuova domanda" />
+        <button onclick="addQuestion()">Aggiungi</button>
     </div>
-    {% endfor %}
+
+    <div>
+        <button onclick="clearQuestions()">CANCELLA FRASI</button>
+    </div>
+
+    <div class="question-container" id="questions-container">
+        <!-- Domande appariranno qui -->
+    </div>
+
+    <script>
+        // Funzione per gestire il sintetizzatore vocale
+        function speak(text) {
+            // Gestisce apostrofi e sostituzioni per migliorare la pronuncia
+            text = text.replace(/l'/g, 'l apostrofo ').replace(/'/g, ''); // Gestisce "l'" e altri apostrofi
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.4;  // Velocità più lenta
+            speechSynthesis.speak(utterance);
+        }
+
+        // Funzione per aggiungere una domanda
+        function addQuestion() {
+            const input = document.getElementById("question-input");
+            const question = input.value.trim();
+            if (question) {
+                const container = document.getElementById("questions-container");
+
+                // Crea un bottone per la domanda
+                const button = document.createElement("button");
+                button.className = "question-button";
+                button.textContent = question;
+                button.onclick = function() { speak(question); };
+
+                // Crea un'icona di eliminazione per la domanda
+                const deleteIcon = document.createElement("span");
+                deleteIcon.className = "delete-icon";
+                deleteIcon.textContent = "❌";
+                deleteIcon.onclick = function() { deleteQuestion(question, button, deleteIcon); };
+
+                // Aggiungi bottone e icona nella UI
+                const div = document.createElement("div");
+                div.appendChild(button);
+                div.appendChild(deleteIcon);
+                container.appendChild(div);
+
+                // Aggiungi la domanda al file
+                saveQuestion(question);
+                input.value = ""; // Pulisce l'input
+            }
+        }
+
+        // Funzione per cancellare una domanda
+        function deleteQuestion(question, button, deleteIcon) {
+            const container = document.getElementById("questions-container");
+            container.removeChild(button.parentNode); // Rimuove il div contenente la domanda e l'icona
+
+            // Invia richiesta per cancellare la domanda dal file
+            fetch('/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: question })
+            });
+        }
+
+        // Funzione per cancellare tutte le domande
+        function clearQuestions() {
+            const container = document.getElementById("questions-container");
+            container.innerHTML = ""; // Rimuove tutte le domande visibili
+
+            // Invia richiesta per cancellare tutte le domande dal file
+            fetch('/clear', { method: 'POST' });
+        }
+
+        // Funzione per salvare una domanda nel file
+        function saveQuestion(question) {
+            fetch('/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: question })
+            });
+        }
+
+        // Funzione per caricare tutte le domande esistenti quando la pagina si carica
+        window.onload = function() {
+            fetch('/get-questions')
+                .then(response => response.json())
+                .then(data => {
+                    data.questions.forEach(function(question) {
+                        const container = document.getElementById("questions-container");
+
+                        // Crea un bottone per la domanda
+                        const button = document.createElement("button");
+                        button.className = "question-button";
+                        button.textContent = question;
+                        button.onclick = function() { speak(question); };
+
+                        // Crea un'icona di eliminazione per la domanda
+                        const deleteIcon = document.createElement("span");
+                        deleteIcon.className = "delete-icon";
+                        deleteIcon.textContent = "❌";
+                        deleteIcon.onclick = function() { deleteQuestion(question, button, deleteIcon); };
+
+                        // Aggiungi bottone e icona nella UI
+                        const div = document.createElement("div");
+                        div.appendChild(button);
+                        div.appendChild(deleteIcon);
+                        container.appendChild(div);
+                    });
+                });
+        };
+    </script>
+
 </body>
 </html>
