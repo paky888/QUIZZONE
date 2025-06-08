@@ -25,6 +25,10 @@
             margin: 10px;
             cursor: pointer;
         }
+        .btn.attiva {
+            background-color: #4CAF50; /* verde */
+            color: white;
+        }
         .delete-button {
             background: none;
             border: none;
@@ -34,10 +38,13 @@
         }
     </style>
     <script>
-        function speak(text) {
+        function speakAndHighlight(button, text) {
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.5;  // velocità più lenta
+            utterance.rate = 0.8;
             speechSynthesis.speak(utterance);
+
+            // cambia colore solo sul bottone cliccato
+            button.classList.add('attiva');
         }
     </script>
 </head>
@@ -57,7 +64,7 @@
 
     {% for domanda in domande %}
     <div class="domanda">
-        <button class="btn" onclick="speak('{{ domanda }}')">{{ domanda }}</button>
+        <button class="btn" onclick="speakAndHighlight(this, '{{ domanda }}')">{{ domanda }}</button>
         <form method="POST" action="/delete_one" style="margin: 0;">
             <input type="hidden" name="domanda" value="{{ domanda }}">
             <button type="submit" class="delete-button" title="Cancella questa frase">❌</button>
