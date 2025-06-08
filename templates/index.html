@@ -1,64 +1,60 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QUIZZONE RSD1A</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QUIZZONE RSD1A</title>
 </head>
 <body>
-    <h1>QUIZZONE</h1>
-    <form id="formDomanda">
-        <label for="domanda">Inserisci una domanda:</label>
-        <input type="text" id="domanda" name="domanda" required>
-        <button type="submit">Aggiungi Domanda</button>
-    </form>
+  <h1>QUIZZONE</h1>
+  <form id="formDomanda">
+    <input type="text" id="domanda" name="domanda" required placeholder="Inserisci domanda">
+    <button type="submit">Aggiungi</button>
+  </form>
 
-    <h2>Domande:</h2>
-    <ul id="lista_domande"></ul>
+  <h2>Domande:</h2>
+  <div id="lista_domande"></div>
 
-    <script>
-        document.getElementById("formDomanda").addEventListener("submit", function(event) {
-            event.preventDefault();  // Previene il comportamento di default del form
+  <script>
+    document.getElementById("formDomanda").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const d = document.getElementById("domanda").value.trim();
+      if (!d) return;
+      fetch('/aggiungi_domanda', {
+        method: 'POST',
+        body: new URLSearchParams({ domanda: d }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById("domanda").value = '';
+          caricaDomande();
+        } else alert(data.message);
+      });
+    });
 
-            const domanda = document.getElementById("domanda").value;
-            if (!domanda) return;
+    async function caricaDomande() {
+      const res = await fetch('/get_domande');
+      const data = await res.json();
+      const c = document.getElementById('lista_domande');
+      c.innerHTML = '';
+      data.domande.forEach(dom => {
+        const btn = document.createElement('button');
+        btn.textContent = dom;
+        btn.style.display = 'block';
+        btn.style.margin = '5px 0';
+        btn.addEventListener('click', () => parlaTesto(dom));
+        c.appendChild(btn);
+      });
+    }
 
-            fetch('/aggiungi_domanda', {
-                method: 'POST',
-                body: new URLSearchParams({ domanda: domanda }), // Invia la domanda come parametro URL
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);  // Mostra messaggio di successo
-                    document.getElementById("domanda").value = '';  // Resetta il campo di input
-                    caricaDomande();  // Ricarica la lista delle domande
-                } else {
-                    alert(data.message);  // Mostra messaggio di errore
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        });
+    function parlaTesto(text) {
+      const u = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(u);
+    }
 
-        // Funzione per caricare tutte le domande
-        function caricaDomande() {
-            fetch('/get_domande')
-                .then(response => response.json())
-                .then(data => {
-                    const listaDomande = document.getElementById("lista_domande");
-                    listaDomande.innerHTML = '';  // Svuota la lista
-                    data.domande.forEach(domanda => {
-                        const li = document.createElement('li');
-                        li.textContent = domanda;
-                        listaDomande.appendChild(li);
-                    });
-                })
-                .catch(error => console.error('Error:', error));
-        }
-
-        // Carica le domande all'avvio
-        caricaDomande();
-    </script>
+    caricaDomande();
+  </script>
 </body>
 </html>
