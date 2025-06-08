@@ -66,6 +66,12 @@
 
     <div class="question-container" id="questions-container">
         <!-- Domande appariranno qui -->
+        {% for question in questions %}
+            <div>
+                <button class="question-button" onclick="speak('{{ question }}')">{{ question }}</button>
+                <span class="delete-icon" onclick="deleteQuestion('{{ question }}')">❌</span>
+            </div>
+        {% endfor %}
     </div>
 
     <div id="correct-response-container">
@@ -113,16 +119,20 @@
         }
 
         // Funzione per cancellare una domanda
-        function deleteQuestion(question, button, deleteIcon) {
+        function deleteQuestion(question) {
             const container = document.getElementById("questions-container");
-            container.removeChild(button.parentNode);
+            container.innerHTML = ""; // Rimuove tutte le domande visibili
 
             // Invia richiesta per cancellare la domanda dal file
             fetch('/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question: question })
-            });
+            }).then(response => response.json())
+              .then(data => {
+                // Dopo la cancellazione, ricarica la lista delle domande
+                loadQuestions();
+              });
         }
 
         // Funzione per cancellare tutte le domande
@@ -131,7 +141,11 @@
             container.innerHTML = ""; // Rimuove tutte le domande visibili
 
             // Invia richiesta per cancellare tutte le domande dal file
-            fetch('/clear', { method: 'POST' });
+            fetch('/clear', { method: 'POST' }).then(response => response.json())
+              .then(data => {
+                // Dopo la cancellazione, ricarica la lista delle domande
+                loadQuestions();
+              });
         }
 
         // Funzione per salvare una domanda nel file
@@ -144,59 +158,22 @@
         }
 
         // Funzione per caricare tutte le domande esistenti quando la pagina si carica
-        window.onload = function() {
+        function loadQuestions() {
             fetch('/get-questions')
                 .then(response => response.json())
                 .then(data => {
+                    const container = document.getElementById("questions-container");
+                    container.innerHTML = ""; // Pulisce le domande attuali
                     data.questions.forEach(function(question) {
-                        const container = document.getElementById("questions-container");
-
-                        // Crea un bottone per la domanda
-                        const button = document.createElement("button");
-                        button.className = "question-button";
-                        button.textContent = question;
-                        button.onclick = function() { speak(question); };
-
-                        // Crea un'icona di eliminazione per la domanda
-                        const deleteIcon = document.createElement("span");
-                        deleteIcon.className = "delete-icon";
-                        deleteIcon.textContent = "❌";
-                        deleteIcon.onclick = function() { deleteQuestion(question, button, deleteIcon); };
-
-                        // Aggiungi bottone e icona nella UI
                         const div = document.createElement("div");
-                        div.appendChild(button);
-                        div.appendChild(deleteIcon);
+                        div.innerHTML = `<button class="question-button" onclick="speak('${question}')">${question}</button> <span class="delete-icon" onclick="deleteQuestion('${question}')">❌</span>`;
                         container.appendChild(div);
                     });
                 });
-        };
-
-        // Funzione per gestire la risposta corretta
-        function showApplause() {
-            // Crea il pulsante di applauso
-            const applauseContainer = document.getElementById("correct-response-container");
-            applauseContainer.innerHTML = ''; // Rimuove precedenti pulsanti di applauso
-            const applauseButton = document.createElement("button");
-            applauseButton.className = "applause-button";
-            applauseButton.innerHTML = '<span class="applause-icon">👏</span> Bravo!';
-
-            applauseButton.onclick = function() {
-                playApplauseSound();
-            };
-
-            applauseContainer.appendChild(applauseButton);
         }
 
-        // Funzione per riprodurre il suono dell'applauso
-        function playApplauseSound() {
-            const audio = new Audio('applause.mp3');  // Assicurati che il file applause.mp3 sia nella stessa cartella
-            audio.play();
-        }
-
-        // Simuliamo una risposta corretta per esempio (puoi modificarlo)
-        // Mostra il pulsante di applauso dopo una risposta corretta
-        showApplause();
+        // Carica le domande quando la pagina è pronta
+        window.onload = loadQuestions;
     </script>
 
 </body>
