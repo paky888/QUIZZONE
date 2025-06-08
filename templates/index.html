@@ -2,65 +2,67 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Quizzone RSD1A by PdS</title>
+    <title>Quizzone RSD1A</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 30px;
-            background-color: #f9f9f9;
-        }
-        h1 {
-            color: #333;
-        }
-        form {
-            margin-bottom: 20px;
-        }
-        input[type="text"] {
-            font-size: 16px;
-            padding: 8px;
-            width: 300px;
-        }
-        button {
-            font-size: 16px;
-            padding: 8px 12px;
-            margin-top: 10px;
-            cursor: pointer;
+            font-family: Arial;
+            text-align: center;
+            padding: 30px;
         }
         .domanda {
-            display: block;
-            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px auto;
+            max-width: 600px;
+            border: 1px solid #ccc;
             padding: 10px;
-            background-color: #e0f7fa;
-            border: none;
-            border-radius: 5px;
+            border-radius: 8px;
+        }
+        .btn {
+            padding: 6px 12px;
             font-size: 16px;
+            margin: 10px;
             cursor: pointer;
-            width: 100%;
-            max-width: 500px;
-            text-align: left;
+        }
+        .delete-button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: red;
+            cursor: pointer;
         }
     </style>
-</head>
-<body>
-    <h1>Quizzone RSD1A by PdS</h1>
-    <form method="post" action="/add">
-        <input type="text" name="domanda" placeholder="Inserisci una nuova domanda" required>
-        <button type="submit">Aggiungi</button>
-    </form>
-
-    <h2>Domande salvate</h2>
-    {% for domanda in domande %}
-        <button class="domanda" onclick="speakText('{{ domanda }}')">{{ domanda }}</button>
-    {% endfor %}
-
     <script>
-        function speakText(text) {
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.rate = 0.5; // rallenta la velocità (default è 1.0)
-            msg.pitch = 1;  // tono normale
-            msg.lang = 'it-IT'; // lingua italiana
-            window.speechSynthesis.speak(msg);
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;  // velocità più lenta
+            speechSynthesis.speak(utterance);
         }
     </script>
+</head>
+<body>
+    <h1>Quizzone RSD1A</h1>
+
+    <form method="POST" action="/add">
+        <input type="text" name="domanda" placeholder="Inserisci una frase" required>
+        <button class="btn" type="submit">Aggiungi</button>
+    </form>
+
+    <form method="POST" action="/delete_all" onsubmit="return confirm('Sei sicuro di voler cancellare tutte le frasi?')">
+        <button class="btn" style="background-color: darkred; color: white;">CANCELLA FRASI</button>
+    </form>
+
+    <hr>
+
+    {% for domanda in domande %}
+    <div class="domanda">
+        <button class="btn" onclick="speak('{{ domanda }}')">{{ domanda }}</button>
+        <form method="POST" action="/delete_one" style="margin: 0;">
+            <input type="hidden" name="domanda" value="{{ domanda }}">
+            <button type="submit" class="delete-button" title="Cancella questa frase">❌</button>
+        </form>
+    </div>
+    {% endfor %}
 </body>
 </html>
