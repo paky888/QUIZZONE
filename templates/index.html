@@ -37,18 +37,6 @@
         button:hover {
             background-color: #0056b3;
         }
-        .applause-button {
-            font-size: 18px;
-            background-color: green;
-            color: white;
-            padding: 10px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        .applause-icon {
-            font-size: 24px;
-            margin-right: 10px;
-        }
     </style>
 </head>
 <body>
@@ -74,9 +62,8 @@
         {% endfor %}
     </div>
 
-    <div id="correct-response-container">
-        <!-- Il pulsante di applauso appare qui dopo una risposta corretta -->
-    </div>
+    <!-- Aggiungi un elemento audio per riprodurre il suono dell'applauso -->
+    <audio id="applause-sound" src="{{ url_for('static', filename='applauso.mp3') }}" preload="auto"></audio>
 
     <script>
         // Funzione per gestire il sintetizzatore vocale
