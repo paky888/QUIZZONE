@@ -56,7 +56,7 @@
     <script>
         function speakText(text) {
             const msg = new SpeechSynthesisUtterance(text);
-            msg.rate = 0.8; // rallenta la velocità (default è 1.0)
+            msg.rate = 0.5; // rallenta la velocità (default è 1.0)
             msg.pitch = 1;  // tono normale
             msg.lang = 'it-IT'; // lingua italiana
             window.speechSynthesis.speak(msg);
