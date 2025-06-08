@@ -14,6 +14,16 @@ def carica_domande():
             return [line.strip() for line in f if line.strip()]
     return []
 
+def cancella_tutte():
+    open(FILE_DOMANDE, "w", encoding="utf-8").close()
+
+def cancella_domanda_singola(domanda):
+    domande = carica_domande()
+    domande = [d for d in domande if d != domanda]
+    with open(FILE_DOMANDE, "w", encoding="utf-8") as f:
+        for d in domande:
+            f.write(d + "\n")
+
 @app.route("/", methods=["GET"])
 def index():
     domande = carica_domande()
@@ -24,6 +34,18 @@ def add_domanda():
     domanda = request.form.get("domanda", "").strip()
     if domanda:
         salva_domanda(domanda)
+    return redirect(url_for("index"))
+
+@app.route("/delete_all", methods=["POST"])
+def delete_all():
+    cancella_tutte()
+    return redirect(url_for("index"))
+
+@app.route("/delete_one", methods=["POST"])
+def delete_one():
+    domanda = request.form.get("domanda", "").strip()
+    if domanda:
+        cancella_domanda_singola(domanda)
     return redirect(url_for("index"))
 
 if __name__ == "__main__":
