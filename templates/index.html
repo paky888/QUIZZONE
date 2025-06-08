@@ -37,6 +37,18 @@
         button:hover {
             background-color: #0056b3;
         }
+        .applause-button {
+            font-size: 18px;
+            background-color: green;
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .applause-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -56,13 +68,16 @@
         <!-- Domande appariranno qui -->
     </div>
 
+    <div id="correct-response-container">
+        <!-- Il pulsante di applauso appare qui dopo una risposta corretta -->
+    </div>
+
     <script>
         // Funzione per gestire il sintetizzatore vocale
         function speak(text) {
-            // Gestisce apostrofi e sostituzioni per migliorare la pronuncia
-            text = text.replace(/l'/g, 'l apostrofo ').replace(/'/g, ''); // Gestisce "l'" e altri apostrofi
+            text = text.replace(/l'/g, 'l apostrofo ').replace(/'/g, '');
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.4;  // Velocità più lenta
+            utterance.rate = 0.5;
             speechSynthesis.speak(utterance);
         }
 
@@ -100,7 +115,7 @@
         // Funzione per cancellare una domanda
         function deleteQuestion(question, button, deleteIcon) {
             const container = document.getElementById("questions-container");
-            container.removeChild(button.parentNode); // Rimuove il div contenente la domanda e l'icona
+            container.removeChild(button.parentNode);
 
             // Invia richiesta per cancellare la domanda dal file
             fetch('/delete', {
@@ -156,6 +171,32 @@
                     });
                 });
         };
+
+        // Funzione per gestire la risposta corretta
+        function showApplause() {
+            // Crea il pulsante di applauso
+            const applauseContainer = document.getElementById("correct-response-container");
+            applauseContainer.innerHTML = ''; // Rimuove precedenti pulsanti di applauso
+            const applauseButton = document.createElement("button");
+            applauseButton.className = "applause-button";
+            applauseButton.innerHTML = '<span class="applause-icon">👏</span> Bravo!';
+
+            applauseButton.onclick = function() {
+                playApplauseSound();
+            };
+
+            applauseContainer.appendChild(applauseButton);
+        }
+
+        // Funzione per riprodurre il suono dell'applauso
+        function playApplauseSound() {
+            const audio = new Audio('applause.mp3');  // Assicurati che il file applause.mp3 sia nella stessa cartella
+            audio.play();
+        }
+
+        // Simuliamo una risposta corretta per esempio (puoi modificarlo)
+        // Mostra il pulsante di applauso dopo una risposta corretta
+        showApplause();
     </script>
 
 </body>
