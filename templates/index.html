@@ -1,60 +1,66 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QUIZZONE RSD1A</title>
+    <meta charset="UTF-8">
+    <title>Quizzone RSD1A by PdS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            font-size: 16px;
+            padding: 8px;
+            width: 300px;
+        }
+        button {
+            font-size: 16px;
+            padding: 8px 12px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .domanda {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #e0f7fa;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 500px;
+            text-align: left;
+        }
+    </style>
 </head>
 <body>
-  <h1>QUIZZONE</h1>
-  <form id="formDomanda">
-    <input type="text" id="domanda" name="domanda" required placeholder="Inserisci domanda">
-    <button type="submit">Aggiungi</button>
-  </form>
+    <h1>Quizzone RSD1A by PdS</h1>
+    <form method="post" action="/add">
+        <input type="text" name="domanda" placeholder="Inserisci una nuova domanda" required>
+        <button type="submit">Aggiungi</button>
+    </form>
 
-  <h2>Domande:</h2>
-  <div id="lista_domande"></div>
+    <h2>Domande salvate</h2>
+    {% for domanda in domande %}
+        <button class="domanda" onclick="speakText('{{ domanda }}')">{{ domanda }}</button>
+    {% endfor %}
 
-  <script>
-    document.getElementById("formDomanda").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const d = document.getElementById("domanda").value.trim();
-      if (!d) return;
-      fetch('/aggiungi_domanda', {
-        method: 'POST',
-        body: new URLSearchParams({ domanda: d }),
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          document.getElementById("domanda").value = '';
-          caricaDomande();
-        } else alert(data.message);
-      });
-    });
-
-    async function caricaDomande() {
-      const res = await fetch('/get_domande');
-      const data = await res.json();
-      const c = document.getElementById('lista_domande');
-      c.innerHTML = '';
-      data.domande.forEach(dom => {
-        const btn = document.createElement('button');
-        btn.textContent = dom;
-        btn.style.display = 'block';
-        btn.style.margin = '5px 0';
-        btn.addEventListener('click', () => parlaTesto(dom));
-        c.appendChild(btn);
-      });
-    }
-
-    function parlaTesto(text) {
-      const u = new SpeechSynthesisUtterance(text);
-      window.speechSynthesis.speak(u);
-    }
-
-    caricaDomande();
-  </script>
+    <script>
+        function speakText(text) {
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.rate = 0.8; // rallenta la velocità (default è 1.0)
+            msg.pitch = 1;  // tono normale
+            msg.lang = 'it-IT'; // lingua italiana
+            window.speechSynthesis.speak(msg);
+        }
+    </script>
 </body>
 </html>
