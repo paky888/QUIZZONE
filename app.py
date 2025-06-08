@@ -1,52 +1,56 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, jsonify
 import os
 
 app = Flask(__name__)
-FILE_DOMANDE = "domande.txt"
 
-def salva_domanda(domanda):
-    with open(FILE_DOMANDE, "a", encoding="utf-8") as f:
-        f.write(domanda + "\n")
+# Path al file domande.txt
+DOMANDE_FILE = 'domande.txt'
 
-def carica_domande():
-    if os.path.exists(FILE_DOMANDE):
-        with open(FILE_DOMANDE, "r", encoding="utf-8") as f:
-            return [line.strip() for line in f if line.strip()]
-    return []
+# Funzione per leggere le domande dal file
+def read_questions():
+    if not os.path.exists(DOMANDE_FILE):
+        return []
+    with open(DOMANDE_FILE, 'r', encoding='utf-8') as file:
+        return [line.strip() for line in file.readlines()]
 
-def cancella_tutte():
-    open(FILE_DOMANDE, "w", encoding="utf-8").close()
+# Funzione per scrivere le domande nel file
+def write_questions(questions):
+    with open(DOMANDE_FILE, 'w', encoding='utf-8') as file:
+        for question in questions:
+            file.write(question + '\n')
 
-def cancella_domanda_singola(domanda):
-    domande = carica_domande()
-    domande = [d for d in domande if d != domanda]
-    with open(FILE_DOMANDE, "w", encoding="utf-8") as f:
-        for d in domande:
-            f.write(d + "\n")
-
-@app.route("/", methods=["GET"])
+@app.route('/')
 def index():
-    domande = carica_domande()
-    return render_template("index.html", domande=domande)
+    questions = read_questions()
+    return render_template('index.html', questions=questions)
 
-@app.route("/add", methods=["POST"])
-def add_domanda():
-    domanda = request.form.get("domanda", "").strip()
-    if domanda:
-        salva_domanda(domanda)
-    return redirect(url_for("index"))
+@app.route('/add', methods=['POST'])
+def add_question():
+    question = request.json.get('question')
+    if question:
+        questions = read_questions()
+        questions.append(question)
+        write_questions(questions)
+    return jsonify({'status': 'success'})
 
-@app.route("/delete_all", methods=["POST"])
-def delete_all():
-    cancella_tutte()
-    return redirect(url_for("index"))
+@app.route('/delete', methods=['POST'])
+def delete_question():
+    question = request.json.get('question')
+    questions = read_questions()
+    if question in questions:
+        questions.remove(question)
+        write_questions(questions)
+    return jsonify({'status': 'success'})
 
-@app.route("/delete_one", methods=["POST"])
-def delete_one():
-    domanda = request.form.get("domanda", "").strip()
-    if domanda:
-        cancella_domanda_singola(domanda)
-    return redirect(url_for("index"))
+@app.route('/clear', methods=['POST'])
+def clear_questions():
+    write_questions([])  # Svuota il file
+    return jsonify({'status': 'success'})
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+@app.route('/get-questions', methods=['GET'])
+def get_questions():
+    questions = read_questions()
+    return jsonify({'questions': questions})
+
+if __name__ == '__main__':
+    app.run(debug=True)
