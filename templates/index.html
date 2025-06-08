@@ -54,23 +54,15 @@
 
     <div class="question-container" id="questions-container">
         <!-- Domande appariranno qui -->
-        {% for question in questions %}
-            <div>
-                <button class="question-button" onclick="speak('{{ question }}')">{{ question }}</button>
-                <span class="delete-icon" onclick="deleteQuestion('{{ question }}')">❌</span>
-            </div>
-        {% endfor %}
     </div>
-
-    <!-- Aggiungi un elemento audio per riprodurre il suono dell'applauso -->
-    <audio id="applause-sound" src="{{ url_for('static', filename='applauso.mp3') }}" preload="auto"></audio>
 
     <script>
         // Funzione per gestire il sintetizzatore vocale
         function speak(text) {
-            text = text.replace(/l'/g, 'l apostrofo ').replace(/'/g, '');
+            // Gestisce apostrofi e sostituzioni per migliorare la pronuncia
+            text = text.replace(/l'/g, 'l apostrofo ').replace(/'/g, ''); // Gestisce "l'" e altri apostrofi
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.5;
+            utterance.rate = 0.5;  // Velocità più lenta
             speechSynthesis.speak(utterance);
         }
 
@@ -106,20 +98,16 @@
         }
 
         // Funzione per cancellare una domanda
-        function deleteQuestion(question) {
+        function deleteQuestion(question, button, deleteIcon) {
             const container = document.getElementById("questions-container");
-            container.innerHTML = ""; // Rimuove tutte le domande visibili
+            container.removeChild(button.parentNode); // Rimuove il div contenente la domanda e l'icona
 
             // Invia richiesta per cancellare la domanda dal file
             fetch('/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question: question })
-            }).then(response => response.json())
-              .then(data => {
-                // Dopo la cancellazione, ricarica la lista delle domande
-                loadQuestions();
-              });
+            });
         }
 
         // Funzione per cancellare tutte le domande
@@ -128,11 +116,7 @@
             container.innerHTML = ""; // Rimuove tutte le domande visibili
 
             // Invia richiesta per cancellare tutte le domande dal file
-            fetch('/clear', { method: 'POST' }).then(response => response.json())
-              .then(data => {
-                // Dopo la cancellazione, ricarica la lista delle domande
-                loadQuestions();
-              });
+            fetch('/clear', { method: 'POST' });
         }
 
         // Funzione per salvare una domanda nel file
@@ -145,22 +129,33 @@
         }
 
         // Funzione per caricare tutte le domande esistenti quando la pagina si carica
-        function loadQuestions() {
+        window.onload = function() {
             fetch('/get-questions')
                 .then(response => response.json())
                 .then(data => {
-                    const container = document.getElementById("questions-container");
-                    container.innerHTML = ""; // Pulisce le domande attuali
                     data.questions.forEach(function(question) {
+                        const container = document.getElementById("questions-container");
+
+                        // Crea un bottone per la domanda
+                        const button = document.createElement("button");
+                        button.className = "question-button";
+                        button.textContent = question;
+                        button.onclick = function() { speak(question); };
+
+                        // Crea un'icona di eliminazione per la domanda
+                        const deleteIcon = document.createElement("span");
+                        deleteIcon.className = "delete-icon";
+                        deleteIcon.textContent = "❌";
+                        deleteIcon.onclick = function() { deleteQuestion(question, button, deleteIcon); };
+
+                        // Aggiungi bottone e icona nella UI
                         const div = document.createElement("div");
-                        div.innerHTML = `<button class="question-button" onclick="speak('${question}')">${question}</button> <span class="delete-icon" onclick="deleteQuestion('${question}')">❌</span>`;
+                        div.appendChild(button);
+                        div.appendChild(deleteIcon);
                         container.appendChild(div);
                     });
                 });
-        }
-
-        // Carica le domande quando la pagina è pronta
-        window.onload = loadQuestions;
+        };
     </script>
 
 </body>
